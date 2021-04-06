@@ -103,13 +103,13 @@ class Window(object):
                   "omxplayer dbus name '%s'"
                   % (x1, y1, x2, y2, str(gridindex), self._omx_dbus_ident))
 
-    def add_stream(self, url):
+    def add_stream(self, url, enable_audio=False):
         """Add a stream URL to this window"""
 
         if not url:
             return
 
-        self.streams.append(StreamInfo(url))
+        self.streams.append(StreamInfo(url, enable_audio))
 
     def set_display_name(self, display_name):
         """Set player OSD text for this window"""
@@ -271,6 +271,7 @@ class Window(object):
 
         if len(self.streams) <= 0:
             return None
+
 
         if self.native_fullscreen:
             windowed = False
@@ -739,7 +740,6 @@ class Window(object):
 
         if force_hq:
             stream = self.get_highest_quality_stream()
-
         self._stream_start(stream=stream)
     
     def _stream_start(self, stream=None):
@@ -755,7 +755,8 @@ class Window(object):
             stream = self.get_default_stream()
 
         if not stream:
-            return
+            stream = self.streams[0]
+            #return
 
         win_width = CONSTANTS.VIRT_SCREEN_WIDTH if self.fullscreen_mode else self.window_width
         win_height = CONSTANTS.VIRT_SCREEN_HEIGHT if self.fullscreen_mode else self.window_height
@@ -799,6 +800,7 @@ class Window(object):
                 '--threshold',      str(CONFIG.BUFFERTIME_MS / 1000),       # Threshold of buffer in seconds
                 '--layer',          str(omx_layer_arg),                     # Dispmanx layer
                 '--alpha',          '255',                                  # No transparency
+                '-o',           'both',                                  # No transparency
                 '--nodeinterlace',                                          # Assume progressive streams
                 '--nohdmiclocksync',                                        # Clock sync makes no sense with multiple clock sources
                 '--display',        '7' if self._display_num == 2 else '2', # 2 is HDMI0 (default), 7 is HDMI1 (pi4)
@@ -815,7 +817,7 @@ class Window(object):
                 player_cmd.append('--live')                                 # Avoid sync issues with long playing streams
 
             if CONFIG.AUDIO_MODE == AUDIOMODE.FULLSCREEN and \
-                    self.visible and self.fullscreen_mode and stream.has_audio:
+                    self.visible and self.fullscreen_mode and stream.has_audio or stream.enable_audio:
                 # OMXplayer can only open 8 instances instead of 16 when audio is enabled,
                 # this can also lead to total system lockups...
                 # Work around this by disabling the audio stream when in windowed mode,

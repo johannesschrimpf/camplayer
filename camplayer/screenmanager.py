@@ -583,7 +583,10 @@ class Screen(object):
 
                             # When the main and subchannel are defined -> e.g. "channel1.1_url"
                             if CONFIG.has_setting(window_map[0].upper(), window_map[1]):
-                                self.windows[idx].add_stream(CONFIG.read_setting(window_map[0].upper(), window_map[1]))
+                                if CONFIG.has_setting(window_map[0].upper(), "enable_audio"):
+                                    self.windows[idx].add_stream(CONFIG.read_setting(window_map[0].upper(), window_map[1]), True)
+                                else:
+                                    self.windows[idx].add_stream(CONFIG.read_setting(window_map[0].upper(), window_map[1]))
 
                             # Only main channel defined, add all matching subchannels -> "channel1_url"
                             # This is the preferred method as it allows us to switch between subchannels
@@ -591,7 +594,10 @@ class Screen(object):
                             else:
                                 for setting, value in CONFIG.get_settings_for_section(window_map[0].upper()):
                                     if window_map[1].split("_")[0] in setting and "url" in setting:
-                                        self.windows[idx].add_stream(value)
+                                        if CONFIG.has_setting(window_map[0].upper(), "enable_audio"):
+                                            self.windows[idx].add_stream(value, True)
+                                        else:
+                                            self.windows[idx].add_stream(value)
 
                             if '_' in window_map[1]:
                                 channel_setting_base = window_map[1].split('_')[0]  # Format: channel1_url

@@ -15,7 +15,7 @@ class StreamInfo(object):
 
     _LOG_NAME = "StreamInfo"
 
-    def __init__(self, stream_url):
+    def __init__(self, stream_url, enable_audio=False):
 
         # Make absolute paths from relative ones
         if stream_url.startswith('file://.'):
@@ -28,6 +28,7 @@ class StreamInfo(object):
         self.width                  = 0
         self.framerate              = 0
         self.has_audio              = False
+        self.enable_audio           = enable_audio
         self.force_udp              = False
         self._parse_stream_details()
 
@@ -43,6 +44,7 @@ class StreamInfo(object):
                                 self.printable_url(), self.width, self.height, self.framerate,
                                 self.codec_name, self.weight, self.valid_url, self.has_audio,
                                 self.valid_video_windowed, self.valid_video_fullscreen, self.force_udp))
+        LOG.INFO(self._LOG_NAME, "enable_audio %s %s" % ( stream_url, str(enable_audio)))
 
     def printable_url(self):
         """Returns streaming url without readable username and password"""
@@ -72,6 +74,7 @@ class StreamInfo(object):
         
         if (self.url.startswith('rtsp://') or
                 self.url.startswith('http://') or
+                self.url.startswith('rtp://') or
                 self.url.startswith('https://') or
                 self.url.startswith('file://')):
             return True
@@ -125,7 +128,7 @@ class StreamInfo(object):
                 self.height <= 1080:
             return True
 
-        return False
+        return True
 
     def _parse_stream_details(self):
         """Read stream details from cache file or parse stream directly"""
